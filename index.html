@@ -1,20 +1,504 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Maii Makeup</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Maii Makeup</title>
+
+<style>
+
+*{
+box-sizing:border-box;
+margin:0;
+padding:0;
+font-family:Arial,sans-serif;
+}
+
+body{
+background:#fff7fb;
+color:#333;
+}
+
+header{
+background:linear-gradient(135deg,#e89abb,#c95f91);
+color:white;
+text-align:center;
+padding:35px 20px;
+}
+
+header h1{
+font-size:38px;
+margin-bottom:8px;
+}
+
+header p{
+font-size:16px;
+}
+
+.aviso{
+background:white;
+margin:18px;
+padding:18px;
+border-radius:15px;
+text-align:center;
+box-shadow:0 3px 12px #00000015;
+}
+
+.aviso strong{
+color:#c94f87;
+font-size:18px;
+}
+
+.contenedor{
+max-width:1000px;
+margin:auto;
+padding:15px;
+}
+
+.titulo{
+margin-top:10px;
+margin-bottom:15px;
+}
+
+.productos{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:15px;
+}
+
+.producto{
+background:white;
+border-radius:16px;
+padding:12px;
+box-shadow:0 3px 12px #00000012;
+}
+
+.producto img{
+width:100%;
+aspect-ratio:1/1;
+object-fit:cover;
+border-radius:12px;
+background:#eee;
+}
+
+.producto h3{
+font-size:16px;
+margin-top:10px;
+}
+
+.precio{
+font-size:18px;
+font-weight:bold;
+color:#c94f87;
+margin:8px 0;
+}
+
+.agregar{
+width:100%;
+border:0;
+background:#c94f87;
+color:white;
+padding:11px;
+border-radius:10px;
+font-weight:bold;
+}
+
+.carrito{
+background:white;
+margin-top:30px;
+padding:20px;
+border-radius:16px;
+box-shadow:0 3px 12px #00000012;
+}
+
+.item{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:10px;
+padding:12px 0;
+border-bottom:1px solid #eee;
+}
+
+.cantidad button{
+border:0;
+background:#f2d5e2;
+padding:6px 10px;
+border-radius:7px;
+}
+
+.total{
+text-align:right;
+font-size:22px;
+font-weight:bold;
+margin-top:20px;
+color:#c94f87;
+}
+
+.whatsapp{
+width:100%;
+border:0;
+background:#25D366;
+color:white;
+padding:14px;
+border-radius:10px;
+font-size:16px;
+font-weight:bold;
+margin-top:15px;
+}
+
+.mensaje{
+text-align:center;
+margin-top:12px;
+font-weight:bold;
+}
+
+footer{
+text-align:center;
+padding:30px 15px;
+color:#777;
+}
+
+@media(min-width:700px){
+
+.productos{
+grid-template-columns:repeat(4,1fr);
+}
+
+}
+
+</style>
 </head>
 
 <body>
 
-  <h1>💄 Maii Makeup</h1>
+<header>
 
-  <h2>Tienda mayorista de maquillaje</h2>
+<h1>Maii Makeup 💄</h1>
 
-  <p>Compra mínima: $60.000</p>
+<p>Maquillaje por mayor</p>
 
-  <p>¡Bienvenidas a Maii Makeup! 🛍️</p>
+</header>
+
+
+<div class="aviso">
+
+<strong>Compra mínima: $60.000</strong>
+
+<p>Armá tu pedido y envialo directamente por WhatsApp.</p>
+
+</div>
+
+
+<div class="contenedor">
+
+<h2 class="titulo">✨ Catálogo</h2>
+
+<div class="productos" id="productos"></div>
+
+
+<div class="carrito">
+
+<h2>🛒 Mi pedido</h2>
+
+<div id="carrito">
+
+<p>Tu pedido está vacío.</p>
+
+</div>
+
+
+<div class="total">
+
+Total: $<span id="total">0</span>
+
+</div>
+
+
+<button class="whatsapp" onclick="enviarWhatsApp()">
+
+📲 Enviar pedido por WhatsApp
+
+</button>
+
+
+<div class="mensaje" id="mensaje"></div>
+
+</div>
+
+</div>
+
+
+<footer>
+
+© 2026 Maii Makeup
+
+</footer>
+
+
+<script>
+
+const productos = [
+
+{
+id:1,
+nombre:"Labial de ejemplo",
+precio:5000,
+imagen:"https://placehold.co/600x600?text=Labial"
+},
+
+{
+id:2,
+nombre:"Gloss de ejemplo",
+precio:7000,
+imagen:"https://placehold.co/600x600?text=Gloss"
+},
+
+{
+id:3,
+nombre:"Máscara de pestañas",
+precio:8500,
+imagen:"https://placehold.co/600x600?text=Máscara"
+},
+
+{
+id:4,
+nombre:"Rubor de ejemplo",
+precio:6500,
+imagen:"https://placehold.co/600x600?text=Rubor"
+}
+
+];
+
+
+let carrito=[];
+
+
+function mostrarProductos(){
+
+const contenedor=document.getElementById("productos");
+
+contenedor.innerHTML="";
+
+
+productos.forEach(producto=>{
+
+contenedor.innerHTML+=`
+
+<div class="producto">
+
+<img src="${producto.imagen}" alt="${producto.nombre}">
+
+<h3>${producto.nombre}</h3>
+
+<div class="precio">
+
+$${producto.precio.toLocaleString("es-AR")}
+
+</div>
+
+<button class="agregar"
+
+onclick="agregar(${producto.id})">
+
+Agregar al pedido
+
+</button>
+
+</div>
+
+`;
+
+});
+
+}
+
+
+function agregar(id){
+
+const producto=productos.find(p=>p.id===id);
+
+const existente=carrito.find(p=>p.id===id);
+
+
+if(existente){
+
+existente.cantidad++;
+
+}else{
+
+carrito.push({
+
+...producto,
+
+cantidad:1
+
+});
+
+}
+
+mostrarCarrito();
+
+}
+
+
+function cambiarCantidad(id,cambio){
+
+const producto=carrito.find(p=>p.id===id);
+
+if(!producto)return;
+
+producto.cantidad+=cambio;
+
+
+if(producto.cantidad<=0){
+
+carrito=carrito.filter(p=>p.id!==id);
+
+}
+
+mostrarCarrito();
+
+}
+
+
+function total(){
+
+return carrito.reduce(
+
+(suma,p)=>suma+(p.precio*p.cantidad),0
+
+);
+
+}
+
+
+function mostrarCarrito(){
+
+const contenedor=document.getElementById("carrito");
+
+const totalActual=total();
+
+document.getElementById("total").textContent=
+
+totalActual.toLocaleString("es-AR");
+
+
+if(carrito.length===0){
+
+contenedor.innerHTML="<p>Tu pedido está vacío.</p>";
+
+return;
+
+}
+
+
+contenedor.innerHTML="";
+
+
+carrito.forEach(p=>{
+
+contenedor.innerHTML+=`
+
+<div class="item">
+
+<div>
+
+<strong>${p.nombre}</strong>
+
+<br>
+
+$${p.precio.toLocaleString("es-AR")}
+
+</div>
+
+
+<div class="cantidad">
+
+<button onclick="cambiarCantidad(${p.id},-1)">−</button>
+
+<strong>${p.cantidad}</strong>
+
+<button onclick="cambiarCantidad(${p.id},1)">+</button>
+
+</div>
+
+</div>
+
+`;
+
+});
+
+}
+
+
+function enviarWhatsApp(){
+
+const totalActual=total();
+
+const mensaje=document.getElementById("mensaje");
+
+
+if(carrito.length===0){
+
+mensaje.textContent="Primero agregá productos al pedido.";
+
+return;
+
+}
+
+
+if(totalActual<60000){
+
+mensaje.textContent=
+
+"La compra mínima es de $60.000.";
+
+return;
+
+}
+
+
+let texto=
+
+"Hola Maii Makeup 💄 Quiero realizar este pedido:%0A%0A";
+
+
+carrito.forEach(p=>{
+
+texto+=
+
+`• ${p.nombre} x${p.cantidad} - $${(p.precio*p.cantidad).toLocaleString("es-AR")}%0A`;
+
+});
+
+
+texto+=
+
+`%0A💰 TOTAL: $${totalActual.toLocaleString("es-AR")}`;
+
+
+const numero="541172396286";
+
+
+window.open(
+
+`https://wa.me/${numero}?text=${texto}`,
+
+"_blank"
+
+);
+
+}
+
+
+mostrarProductos();
+
+mostrarCarrito();
+
+</script>
 
 </body>
+
 </html>
