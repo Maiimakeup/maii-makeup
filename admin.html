@@ -26,7 +26,6 @@
 
     header h1 {
       margin: 0;
-      font-size: 25px;
     }
 
     .container {
@@ -43,7 +42,6 @@
     }
 
     h2 {
-      margin-top: 0;
       color: #c66b9d;
     }
 
@@ -74,8 +72,8 @@
       font-weight: bold;
     }
 
-    button:hover {
-      background: #c46699;
+    button:disabled {
+      opacity: .6;
     }
 
     #preview {
@@ -87,10 +85,10 @@
       margin-top: 12px;
     }
 
-    .nota {
-      font-size: 13px;
-      color: #777;
+    #mensaje {
       margin-top: 15px;
+      font-weight: bold;
+      text-align: center;
     }
   </style>
 </head>
@@ -134,34 +132,194 @@
 
     <img id="preview">
 
-    <button onclick="guardarProducto()">
+    <button id="guardar" onclick="guardarProducto()">
       Guardar producto
     </button>
 
-    <p class="nota">
-      La imagen se cargará al almacenamiento y el producto quedará guardado en la base de datos.
-    </p>
+    <div id="mensaje"></div>
 
   </div>
 </div>
 
 <script>
-function guardarProducto() {
+  /*
+    ================================
+    CONFIGURACIÓN DE SUPABASE
+    ================================
+  */
 
-  const nombre = document.getElementById("nombre").value;
-  const precio = document.getElementById("precio").value;
-  const stock = document.getElementById("stock").value;
-  const categoria = document.getElementById("categoria").value;
-  const imagen = document.getElementById("imagen").files[0];
+  const SUPABASE_URL = "https://ydapwodjmmxihkfiuddk.supabase.co";
 
-  if (!nombre || !precio || !stock || !categoria || !imagen) {
-    alert("Completá todos los campos.");
-    return;
+  /*
+    PEGÁ ACÁ TU PUBLISHABLE KEY.
+    
+    IMPORTANTE:
+    Usá la clave que ya tenés en Supabase.
+    No uses una secret/service_role key.
+  */
+  const SUPABASE_KEY = "sb_publishable_ezcd-XVSZChvsKuMg93WNA_yFVfImux";
+
+
+  /*
+    ================================
+    PREVISUALIZACIÓN DE LA IMAGEN
+    ================================
+  */
+
+  document.getElementById("imagen").addEventListener("change", function() {
+
+    const archivo = this.files[0];
+    const preview = document.getElementById("preview");
+
+    if (!archivo) {
+      preview.style.display = "none";
+      return;
+    }
+
+    preview.src = URL.createObjectURL(archivo);
+    preview.style.display = "block";
+  });
+
+
+  /*
+    ================================
+    GUARDAR PRODUCTO
+    ================================
+  */
+
+  async function guardarProducto() {
+
+    const nombre = document.getElementById("nombre").value.trim();
+    const precio = document.getElementById("precio").value;
+    const stock = document.getElementById("stock").value;
+    const categoria = document.getElementById("categoria").value;
+    const imagen = document.getElementById("imagen").files[0];
+
+    const boton = document.getElementById("guardar");
+    const mensaje = document.getElementById("mensaje");
+
+    if (!nombre || !precio || !stock || !categoria || !imagen) {
+      mensaje.textContent = "⚠️ Completá todos los campos.";
+      return;
+    }
+
+    if (SUPABASE_KEY === "PEGAR_AQUI_TU_PUBLISHABLE_KEY") {
+      mensaje.textContent = "⚠️ Falta configurar la Publishable Key.";
+      return;
+    }
+
+    try {
+
+      boton.disabled = true;
+      boton.textContent = "Guardando...";
+
+      /*
+        Nombre único para la imagen
+      */
+
+      const nombreArchivo =
+        Date.now() + "-" +
+        imagen.name.replace(/[^a-zA-Z0-9._-]/g, "-");
+
+
+      /*
+        1. SUBIR IMAGEN A SUPABASE STORAGE
+      */
+
+      const subida = await fetch(
+        SUPABASE_URL +
+        "/storage/v1/object/Productos/" +
+        nombreArchivo,
+        {
+          method: "POST",
+
+          headers: {
+            "Authorization": "Bearer " + SUPABASE_KEY,
+            "apikey": SUPABASE_KEY,
+            "Content-Type": imagen.type
+          },
+
+          body: imagen
+        }
+      );
+
+      if (!subida.ok) {
+        const error = await subida.text();
+        throw new Error("Error al subir la imagen: " + error);
+      }
+
+
+      /*
+        2. CREAR URL PÚBLICA DE LA IMAGEN
+      */
+
+      const imagenURL =
+        SUPABASE_URL +
+        "/storage/v1/object/public/Productos/" +
+        nombreArchivo;
+
+
+      /*
+        3. GUARDAR LOS DATOS EN LA TABLA PRODUCTOS
+      */
+
+      const producto = await fetch(
+        SUPABASE_URL + "/rest/v1/productos",
+        {
+          method: "POST",
+
+          headers: {
+            "Authorization": "Bearer " + SUPABASE_KEY,
+            "apikey": SUPABASE_KEY,
+            "Content-Type": "application/json",
+            "Prefer": "return=minimal"
+          },
+
+          body: JSON.stringify({
+            nombre: nombre,
+            precio: Number(precio),
+            stock: Number(stock),
+            imagen: imagenURL,
+            categoria: categoria
+          })
+        }
+      );
+
+
+      if (!producto.ok) {
+        const error = await producto.text();
+        throw new Error("Error al guardar el producto: " + error);
+      }
+
+
+      /*
+        4. TODO LISTO
+      */
+
+      mensaje.textContent = "✅ Producto agregado correctamente.";
+
+      document.getElementById("nombre").value = "";
+      document.getElementById("precio").value = "";
+      document.getElementById("stock").value = "";
+      document.getElementById("categoria").value = "";
+      document.getElementById("imagen").value = "";
+
+      document.getElementById("preview").style.display = "none";
+
+    } catch (error) {
+
+      console.error(error);
+
+      mensaje.textContent =
+        "❌ No se pudo guardar: " + error.message;
+
+    } finally {
+
+      boton.disabled = false;
+      boton.textContent = "Guardar producto";
+    }
   }
 
-  alert("Producto preparado. En el siguiente paso conectaremos este panel con Supabase.");
-
-}
 </script>
 
 </body>
