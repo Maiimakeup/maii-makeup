@@ -142,28 +142,14 @@
 </div>
 
 <script>
-  /*
-    ================================
-    CONFIGURACIÓN DE SUPABASE
-    ================================
-  */
 
   const SUPABASE_URL = "https://ydapwodjmmxihkfiuddk.supabase.co";
 
-  /*
-    PEGÁ ACÁ TU PUBLISHABLE KEY.
-    
-    IMPORTANTE:
-    Usá la clave que ya tenés en Supabase.
-    No uses una secret/service_role key.
-  */
   const SUPABASE_KEY = "sb_publishable_ezcd-XVSZChvsKuMg93WNA_yFVfImux";
 
 
   /*
-    ================================
     PREVISUALIZACIÓN DE LA IMAGEN
-    ================================
   */
 
   document.getElementById("imagen").addEventListener("change", function() {
@@ -182,9 +168,7 @@
 
 
   /*
-    ================================
     GUARDAR PRODUCTO
-    ================================
   */
 
   async function guardarProducto() {
@@ -203,18 +187,14 @@
       return;
     }
 
-    if (SUPABASE_KEY === "PEGAR_AQUI_TU_PUBLISHABLE_KEY") {
-      mensaje.textContent = "⚠️ Falta configurar la Publishable Key.";
-      return;
-    }
-
     try {
 
       boton.disabled = true;
       boton.textContent = "Guardando...";
 
+
       /*
-        Nombre único para la imagen
+        NOMBRE ÚNICO PARA LA IMAGEN
       */
 
       const nombreArchivo =
@@ -224,11 +204,13 @@
 
       /*
         1. SUBIR IMAGEN A SUPABASE STORAGE
+
+        El bucket se llama "productos".
       */
 
       const subida = await fetch(
         SUPABASE_URL +
-        "/storage/v1/object/Productos/" +
+        "/storage/v1/object/productos/" +
         nombreArchivo,
         {
           method: "POST",
@@ -255,7 +237,7 @@
 
       const imagenURL =
         SUPABASE_URL +
-        "/storage/v1/object/public/Productos/" +
+        "/storage/v1/object/public/productos/" +
         nombreArchivo;
 
 
