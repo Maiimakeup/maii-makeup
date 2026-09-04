@@ -207,7 +207,10 @@
 
         El bucket se llama "productos".
       */
+console.log("1 - intentando subir imagen");
 
+      if (!subida.ok) {
+        
       const subida = await fetch(
         SUPABASE_URL +
         "/storage/v1/object/Productos/" +
@@ -244,7 +247,8 @@
       /*
         3. GUARDAR LOS DATOS EN LA TABLA PRODUCTOS
       */
-
+console.log("2 - intentando guardar producto");
+        
       const producto = await fetch(
         SUPABASE_URL + "/rest/v1/productos",
         {
