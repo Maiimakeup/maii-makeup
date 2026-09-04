@@ -3,46 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel Maii Makeup</title>
+
+  <title>Panel de Administración</title>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
     body {
-      margin: 0;
       font-family: Arial, sans-serif;
-      background: #fff7fb;
-      color: #333;
-    }
-
-    header {
-      background: #d98bb5;
-      color: white;
-      padding: 22px;
-      text-align: center;
-    }
-
-    header h1 {
+      background: #f7f7f7;
       margin: 0;
-    }
-
-    .container {
-      max-width: 600px;
-      margin: 25px auto;
       padding: 20px;
     }
 
-    .card {
+    .contenedor {
+      max-width: 500px;
+      margin: 30px auto;
       background: white;
-      border-radius: 18px;
-      padding: 22px;
-      box-shadow: 0 3px 15px rgba(0,0,0,.08);
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     }
 
-    h2 {
-      color: #c66b9d;
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
     }
 
     label {
@@ -52,118 +35,152 @@
       font-weight: bold;
     }
 
-    input, select {
+    input,
+    select {
       width: 100%;
+      box-sizing: border-box;
       padding: 12px;
       border: 1px solid #ddd;
-      border-radius: 10px;
+      border-radius: 8px;
       font-size: 16px;
     }
 
     button {
       width: 100%;
-      margin-top: 22px;
+      margin-top: 25px;
       padding: 14px;
       border: none;
-      border-radius: 12px;
-      background: #d477aa;
+      border-radius: 8px;
+      background: #111;
       color: white;
-      font-size: 17px;
+      font-size: 16px;
       font-weight: bold;
+      cursor: pointer;
     }
 
     button:disabled {
-      opacity: .6;
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
     #preview {
       display: none;
-      width: 140px;
-      height: 140px;
+      width: 150px;
+      height: 150px;
       object-fit: cover;
-      border-radius: 12px;
-      margin-top: 12px;
+      margin: 15px auto 0;
+      border-radius: 10px;
     }
 
     #mensaje {
-      margin-top: 15px;
-      font-weight: bold;
+      margin-top: 20px;
       text-align: center;
+      font-weight: bold;
+      word-break: break-word;
     }
   </style>
 </head>
 
 <body>
 
-<header>
-  <h1>💄 Maii Makeup</h1>
-  <p>Panel de administración</p>
-</header>
+  <div class="contenedor">
 
-<div class="container">
-  <div class="card">
+    <h1>Agregar producto</h1>
 
-    <h2>Agregar producto</h2>
+    <form id="formulario">
 
-    <label>Nombre del producto</label>
-    <input type="text" id="nombre" placeholder="Ej: Base líquida">
+      <label for="nombre">Nombre</label>
+      <input
+        type="text"
+        id="nombre"
+        required
+      >
 
-    <label>Precio mayorista</label>
-    <input type="number" id="precio" placeholder="Ej: 12000">
+      <label for="precio">Precio</label>
+      <input
+        type="number"
+        id="precio"
+        min="0"
+        required
+      >
 
-    <label>Stock</label>
-    <input type="number" id="stock" placeholder="Ej: 10">
+      <label for="stock">Stock</label>
+      <input
+        type="number"
+        id="stock"
+        min="0"
+        required
+      >
 
-    <label>Categoría</label>
-    <select id="categoria">
-      <option value="">Seleccionar categoría</option>
-      <option>Labiales</option>
-      <option>Bases</option>
-      <option>Correctores</option>
-      <option>Máscaras</option>
-      <option>Sombras</option>
-      <option>Rubores</option>
-      <option>Iluminadores</option>
-      <option>Otros</option>
-    </select>
+      <label for="categoria">Categoría</label>
+      <input
+        type="text"
+        id="categoria"
+        required
+      >
 
-    <label>Imagen del producto</label>
-    <input type="file" id="imagen" accept="image/*">
+      <label for="imagen">Imagen</label>
+      <input
+        type="file"
+        id="imagen"
+        accept="image/*"
+        required
+      >
 
-    <img id="preview">
+      <img id="preview" alt="Vista previa">
 
-    <button id="guardar" onclick="guardarProducto()">
-      Guardar producto
-    </button>
+      <button type="submit" id="boton">
+        Guardar producto
+      </button>
+
+    </form>
 
     <div id="mensaje"></div>
 
   </div>
-</div>
+
 
 <script>
 
-  const SUPABASE_URL = "https://ydapwodjmmxihkfiuddk.supabase.co";
+  /*
+    CONFIGURACIÓN SUPABASE
+  */
 
-  const SUPABASE_KEY = "sb_publishable_ezcd-XVSZChvsKuMg93WNA_yFVfImux";
+  const SUPABASE_URL =
+    "https://ydapwodjmmxihkfiuddk.supabase.co";
+
+  const SUPABASE_KEY =
+    "sb_publishable_ezcd-XVSZChvsKuMg93WNA_yFVfImux";
 
 
   /*
-    PREVISUALIZACIÓN DE LA IMAGEN
+    ELEMENTOS
   */
 
-  document.getElementById("imagen").addEventListener("change", function() {
+  const formulario = document.getElementById("formulario");
+  const boton = document.getElementById("boton");
+  const mensaje = document.getElementById("mensaje");
+  const imagenInput = document.getElementById("imagen");
+  const preview = document.getElementById("preview");
+
+
+  /*
+    VISTA PREVIA DE IMAGEN
+  */
+
+  imagenInput.addEventListener("change", function () {
 
     const archivo = this.files[0];
-    const preview = document.getElementById("preview");
 
     if (!archivo) {
       preview.style.display = "none";
+      preview.src = "";
       return;
     }
 
     preview.src = URL.createObjectURL(archivo);
     preview.style.display = "block";
+
   });
 
 
@@ -171,26 +188,55 @@
     GUARDAR PRODUCTO
   */
 
-  async function guardarProducto() {
+  formulario.addEventListener("submit", async function (event) {
 
-    const nombre = document.getElementById("nombre").value.trim();
-    const precio = document.getElementById("precio").value;
-    const stock = document.getElementById("stock").value;
-    const categoria = document.getElementById("categoria").value;
-    const imagen = document.getElementById("imagen").files[0];
+    event.preventDefault();
 
-    const boton = document.getElementById("guardar");
-    const mensaje = document.getElementById("mensaje");
-
-    if (!nombre || !precio || !stock || !categoria || !imagen) {
-      mensaje.textContent = "⚠️ Completá todos los campos.";
-      return;
-    }
+    mensaje.textContent = "";
+    boton.disabled = true;
+    boton.textContent = "Guardando...";
 
     try {
 
-      boton.disabled = true;
-      boton.textContent = "Guardando...";
+      const nombre =
+        document.getElementById("nombre").value.trim();
+
+      const precio =
+        document.getElementById("precio").value;
+
+      const stock =
+        document.getElementById("stock").value;
+
+      const categoria =
+        document.getElementById("categoria").value.trim();
+
+      const imagen =
+        document.getElementById("imagen").files[0];
+
+
+      /*
+        VALIDACIONES
+      */
+
+      if (!nombre) {
+        throw new Error("Falta el nombre del producto.");
+      }
+
+      if (!precio) {
+        throw new Error("Falta el precio.");
+      }
+
+      if (!stock) {
+        throw new Error("Falta el stock.");
+      }
+
+      if (!categoria) {
+        throw new Error("Falta la categoría.");
+      }
+
+      if (!imagen) {
+        throw new Error("Seleccioná una imagen.");
+      }
 
 
       /*
@@ -203,36 +249,55 @@
 
 
       /*
-        1. SUBIR IMAGEN A SUPABASE STORAGE
+        1. SUBIR IMAGEN A STORAGE
 
-        El bucket se llama "productos".
+        Bucket: Productos
       */
-const subida = await fetch(
-  SUPABASE_URL + "/storage/v1/object/Productos/" + nombreArchivo,
-  {
-    method: "POST",
-    headers: {
-      "Authorization": "Bearer " + SUPABASE_KEY,
-      "apikey": SUPABASE_KEY,
-      "Content-Type": imagen.type
-    },
-    body: imagen
-  }
-);
 
-if (!subida.ok) {
-  const texto = await subida.text();
-  throw new Error("STORAGE: " + texto);
-}
+      let subida;
 
-console.log("IMAGEN SUBIDA OK");
-        const error = await subida.text();
-        throw new Error("Error al subir la imagen: " + error);
+      try {
+
+        subida = await fetch(
+          SUPABASE_URL +
+          "/storage/v1/object/Productos/" +
+          nombreArchivo,
+          {
+            method: "POST",
+
+            headers: {
+              "Authorization": "Bearer " + SUPABASE_KEY,
+              "apikey": SUPABASE_KEY,
+              "Content-Type": imagen.type
+            },
+
+            body: imagen
+          }
+        );
+
+      } catch (error) {
+
+        throw new Error(
+          "No se pudo conectar con Supabase Storage. " +
+          "Detalle: " + error.message
+        );
+
+      }
+
+
+      if (!subida.ok) {
+
+        const texto = await subida.text();
+
+        throw new Error(
+          "Error al subir la imagen: " + texto
+        );
+
       }
 
 
       /*
-        2. CREAR URL PÚBLICA DE LA IMAGEN
+        URL PÚBLICA DE LA IMAGEN
       */
 
       const imagenURL =
@@ -242,66 +307,90 @@ console.log("IMAGEN SUBIDA OK");
 
 
       /*
-        3. GUARDAR LOS DATOS EN LA TABLA PRODUCTOS
+        2. GUARDAR PRODUCTO EN LA TABLA
+
+        Tabla: productos
       */
-console.log("2 - intentando guardar producto");
-        
-      const producto = await fetch(
-        SUPABASE_URL + "/rest/v1/productos",
-        {
-          method: "POST",
 
-          headers: {
-            "Authorization": "Bearer " + SUPABASE_KEY,
-            "apikey": SUPABASE_KEY,
-            "Content-Type": "application/json",
-            "Prefer": "return=minimal"
-          },
+      let producto;
 
-          body: JSON.stringify({
-            nombre: nombre,
-            precio: Number(precio),
-            stock: Number(stock),
-            imagen: imagenURL,
-            categoria: categoria
-          })
-        }
-      );
+      try {
+
+        producto = await fetch(
+          SUPABASE_URL +
+          "/rest/v1/productos",
+          {
+            method: "POST",
+
+            headers: {
+              "Authorization": "Bearer " + SUPABASE_KEY,
+              "apikey": SUPABASE_KEY,
+              "Content-Type": "application/json",
+              "Prefer": "return=minimal"
+            },
+
+            body: JSON.stringify({
+              nombre: nombre,
+              precio: Number(precio),
+              stock: Number(stock),
+              imagen: imagenURL,
+              categoria: categoria
+            })
+          }
+        );
+
+      } catch (error) {
+
+        throw new Error(
+          "No se pudo conectar con la tabla productos. " +
+          "Detalle: " + error.message
+        );
+
+      }
 
 
       if (!producto.ok) {
-        const error = await producto.text();
-        throw new Error("Error al guardar el producto: " + error);
+
+        const texto = await producto.text();
+
+        throw new Error(
+          "Error al guardar el producto: " + texto
+        );
+
       }
 
 
       /*
-        4. TODO LISTO
+        TODO CORRECTO
       */
 
-      mensaje.textContent = "✅ Producto agregado correctamente.";
+      mensaje.textContent =
+        "✅ Producto agregado correctamente.";
 
-      document.getElementById("nombre").value = "";
-      document.getElementById("precio").value = "";
-      document.getElementById("stock").value = "";
-      document.getElementById("categoria").value = "";
-      document.getElementById("imagen").value = "";
+      formulario.reset();
 
-      document.getElementById("preview").style.display = "none";
+      preview.src = "";
+      preview.style.display = "none";
+
 
     } catch (error) {
 
-      console.error(error);
+      console.error("ERROR:", error);
 
       mensaje.textContent =
-        "❌ No se pudo guardar: " + error.message;
+        "❌ No se pudo guardar: " +
+        error.message;
+
 
     } finally {
 
       boton.disabled = false;
-      boton.textContent = "Guardar producto";
+      boton.textContent =
+        "Guardar producto";
+
     }
-  }
+
+  });
 
 </script>
 
