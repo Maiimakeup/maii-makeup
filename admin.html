@@ -6,7 +6,14 @@
 
   <title>Panel de Administración</title>
 
+  <!-- Librería oficial de Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: Arial, sans-serif;
       background: #f7f7f7;
@@ -15,17 +22,18 @@
     }
 
     .contenedor {
+      width: 100%;
       max-width: 500px;
       margin: 30px auto;
-      background: white;
+      background: #ffffff;
       padding: 25px;
       border-radius: 15px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     }
 
     h1 {
       text-align: center;
-      margin-bottom: 25px;
+      margin: 0 0 25px;
     }
 
     label {
@@ -35,14 +43,18 @@
       font-weight: bold;
     }
 
-    input,
-    select {
+    input {
       width: 100%;
-      box-sizing: border-box;
       padding: 12px;
       border: 1px solid #ddd;
       border-radius: 8px;
       font-size: 16px;
+      background: white;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #111;
     }
 
     button {
@@ -76,7 +88,16 @@
       margin-top: 20px;
       text-align: center;
       font-weight: bold;
+      line-height: 1.5;
       word-break: break-word;
+    }
+
+    .exito {
+      color: green;
+    }
+
+    .error {
+      color: #c00;
     }
   </style>
 </head>
@@ -93,6 +114,7 @@
       <input
         type="text"
         id="nombre"
+        placeholder="Nombre del producto"
         required
       >
 
@@ -101,6 +123,8 @@
         type="number"
         id="precio"
         min="0"
+        step="1"
+        placeholder="Precio"
         required
       >
 
@@ -109,6 +133,8 @@
         type="number"
         id="stock"
         min="0"
+        step="1"
+        placeholder="Cantidad disponible"
         required
       >
 
@@ -116,6 +142,7 @@
       <input
         type="text"
         id="categoria"
+        placeholder="Categoría"
         required
       >
 
@@ -123,7 +150,7 @@
       <input
         type="file"
         id="imagen"
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp,image/gif"
         required
       >
 
@@ -143,7 +170,9 @@
 <script>
 
   /*
-    CONFIGURACIÓN SUPABASE
+  =====================================================
+  CONFIGURACIÓN DE SUPABASE
+  =====================================================
   */
 
   const SUPABASE_URL =
@@ -154,18 +183,45 @@
 
 
   /*
-    ELEMENTOS
+  =====================================================
+  CREAR CONEXIÓN CON SUPABASE
+  =====================================================
   */
 
-  const formulario = document.getElementById("formulario");
-  const boton = document.getElementById("boton");
-  const mensaje = document.getElementById("mensaje");
-  const imagenInput = document.getElementById("imagen");
-  const preview = document.getElementById("preview");
+  const { createClient } = supabase;
+
+  const cliente = createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
 
 
   /*
-    VISTA PREVIA DE IMAGEN
+  =====================================================
+  ELEMENTOS DEL FORMULARIO
+  =====================================================
+  */
+
+  const formulario =
+    document.getElementById("formulario");
+
+  const boton =
+    document.getElementById("boton");
+
+  const mensaje =
+    document.getElementById("mensaje");
+
+  const imagenInput =
+    document.getElementById("imagen");
+
+  const preview =
+    document.getElementById("preview");
+
+
+  /*
+  =====================================================
+  MOSTRAR VISTA PREVIA
+  =====================================================
   */
 
   imagenInput.addEventListener("change", function () {
@@ -173,224 +229,350 @@
     const archivo = this.files[0];
 
     if (!archivo) {
-      preview.style.display = "none";
+
       preview.src = "";
+      preview.style.display = "none";
+
       return;
     }
 
-    preview.src = URL.createObjectURL(archivo);
+    const url =
+      URL.createObjectURL(archivo);
+
+    preview.src = url;
     preview.style.display = "block";
 
   });
 
 
   /*
-    GUARDAR PRODUCTO
+  =====================================================
+  FUNCIÓN PARA MOSTRAR MENSAJES
+  =====================================================
   */
 
-  formulario.addEventListener("submit", async function (event) {
+  function mostrarMensaje(texto, tipo) {
 
-    event.preventDefault();
+    mensaje.textContent = texto;
 
-    mensaje.textContent = "";
-    boton.disabled = true;
-    boton.textContent = "Guardando...";
+    mensaje.className =
+      tipo === "error"
+        ? "error"
+        : "exito";
 
-    try {
-
-      const nombre =
-        document.getElementById("nombre").value.trim();
-
-      const precio =
-        document.getElementById("precio").value;
-
-      const stock =
-        document.getElementById("stock").value;
-
-      const categoria =
-        document.getElementById("categoria").value.trim();
-
-      const imagen =
-        document.getElementById("imagen").files[0];
+  }
 
 
-      /*
+  /*
+  =====================================================
+  GUARDAR PRODUCTO
+  =====================================================
+  */
+
+  formulario.addEventListener(
+    "submit",
+    async function (event) {
+
+      event.preventDefault();
+
+      mostrarMensaje("", "");
+
+      boton.disabled = true;
+      boton.textContent = "Guardando...";
+
+
+      try {
+
+        /*
+        -------------------------------------------------
+        OBTENER DATOS
+        -------------------------------------------------
+        */
+
+        const nombre =
+          document
+            .getElementById("nombre")
+            .value
+            .trim();
+
+        const precio =
+          document
+            .getElementById("precio")
+            .value;
+
+        const stock =
+          document
+            .getElementById("stock")
+            .value;
+
+        const categoria =
+          document
+            .getElementById("categoria")
+            .value
+            .trim();
+
+        const imagen =
+          imagenInput.files[0];
+
+
+        /*
+        -------------------------------------------------
         VALIDACIONES
-      */
+        -------------------------------------------------
+        */
 
-      if (!nombre) {
-        throw new Error("Falta el nombre del producto.");
-      }
+        if (!nombre) {
+          throw new Error(
+            "Falta el nombre del producto."
+          );
+        }
 
-      if (!precio) {
-        throw new Error("Falta el precio.");
-      }
+        if (precio === "") {
+          throw new Error(
+            "Falta el precio."
+          );
+        }
 
-      if (!stock) {
-        throw new Error("Falta el stock.");
-      }
+        if (stock === "") {
+          throw new Error(
+            "Falta el stock."
+          );
+        }
 
-      if (!categoria) {
-        throw new Error("Falta la categoría.");
-      }
+        if (!categoria) {
+          throw new Error(
+            "Falta la categoría."
+          );
+        }
 
-      if (!imagen) {
-        throw new Error("Seleccioná una imagen.");
-      }
+        if (!imagen) {
+          throw new Error(
+            "Seleccioná una imagen."
+          );
+        }
 
 
-      /*
+        /*
+        -------------------------------------------------
+        VALIDAR TIPO DE IMAGEN
+        -------------------------------------------------
+        */
+
+        const tiposPermitidos = [
+          "image/jpeg",
+          "image/png",
+          "image/webp",
+          "image/gif"
+        ];
+
+        if (
+          !tiposPermitidos.includes(imagen.type)
+        ) {
+
+          throw new Error(
+            "El formato de imagen no es válido. " +
+            "Usá JPG, PNG, WEBP o GIF."
+          );
+
+        }
+
+
+        /*
+        -------------------------------------------------
         NOMBRE ÚNICO PARA LA IMAGEN
-      */
+        -------------------------------------------------
+        */
 
-      const nombreArchivo =
-        Date.now() + "-" +
-        imagen.name.replace(/[^a-zA-Z0-9._-]/g, "-");
+        const extension =
+          imagen.name
+            .split(".")
+            .pop()
+            .toLowerCase();
+
+        const nombreArchivo =
+          Date.now() +
+          "-" +
+          Math.random()
+            .toString(36)
+            .substring(2, 8) +
+          "." +
+          extension;
 
 
-      /*
-        1. SUBIR IMAGEN A STORAGE
+        /*
+        =================================================
+        1. SUBIR IMAGEN
+        BUCKET: Productos
+        =================================================
+        */
 
-        Bucket: Productos
-      */
-
-      let subida;
-
-      try {
-
-        subida = await fetch(
-          SUPABASE_URL +
-          "/storage/v1/object/Productos/" +
-          nombreArchivo,
-          {
-            method: "POST",
-
-            headers: {
-              "Authorization": "Bearer " + SUPABASE_KEY,
-              "apikey": SUPABASE_KEY,
-              "Content-Type": imagen.type
-            },
-
-            body: imagen
-          }
+        mostrarMensaje(
+          "Subiendo imagen...",
+          ""
         );
+
+
+        const { data: archivoSubido, error: errorSubida } =
+          await cliente.storage
+            .from("Productos")
+            .upload(
+              nombreArchivo,
+              imagen,
+              {
+                cacheControl: "3600",
+                upsert: false,
+                contentType: imagen.type
+              }
+            );
+
+
+        if (errorSubida) {
+
+          console.error(
+            "ERROR STORAGE:",
+            errorSubida
+          );
+
+          throw new Error(
+            "No se pudo subir la imagen: " +
+            errorSubida.message
+          );
+
+        }
+
+
+        /*
+        =================================================
+        2. OBTENER URL PÚBLICA
+        =================================================
+        */
+
+        const {
+          data: urlImagen
+        } =
+          cliente.storage
+            .from("Productos")
+            .getPublicUrl(
+              archivoSubido.path
+            );
+
+
+        const imagenURL =
+          urlImagen.publicUrl;
+
+
+        /*
+        =================================================
+        3. GUARDAR PRODUCTO EN LA TABLA
+        TABLA: productos
+        =================================================
+        */
+
+        mostrarMensaje(
+          "Guardando producto...",
+          ""
+        );
+
+
+        const { data: productoGuardado, error: errorProducto } =
+          await cliente
+            .from("productos")
+            .insert([
+              {
+                nombre: nombre,
+                precio: Number(precio),
+                stock: Number(stock),
+                categoria: categoria,
+                imagen: imagenURL
+              }
+            ])
+            .select();
+
+
+        if (errorProducto) {
+
+          console.error(
+            "ERROR TABLA:",
+            errorProducto
+          );
+
+
+          /*
+          Si la imagen se subió pero
+          el producto no pudo guardarse,
+          intentamos eliminar la imagen
+          para no dejar archivos basura.
+          */
+
+          await cliente.storage
+            .from("Productos")
+            .remove([
+              archivoSubido.path
+            ]);
+
+
+          throw new Error(
+            "La imagen se subió, pero no se pudo guardar " +
+            "el producto: " +
+            errorProducto.message
+          );
+
+        }
+
+
+        /*
+        =================================================
+        4. ÉXITO
+        =================================================
+        */
+
+        console.log(
+          "PRODUCTO GUARDADO:",
+          productoGuardado
+        );
+
+
+        mostrarMensaje(
+          "✅ Producto agregado correctamente.",
+          "exito"
+        );
+
+
+        /*
+        Limpiar formulario
+        */
+
+        formulario.reset();
+
+        preview.src = "";
+        preview.style.display = "none";
+
 
       } catch (error) {
 
-        throw new Error(
-          "No se pudo conectar con Supabase Storage. " +
-          "Detalle: " + error.message
+        console.error(
+          "ERROR COMPLETO:",
+          error
         );
+
+
+        mostrarMensaje(
+          "❌ " + error.message,
+          "error"
+        );
+
+
+      } finally {
+
+        boton.disabled = false;
+
+        boton.textContent =
+          "Guardar producto";
 
       }
-
-
-      if (!subida.ok) {
-
-        const texto = await subida.text();
-
-        throw new Error(
-          "Error al subir la imagen: " + texto
-        );
-
-      }
-
-
-      /*
-        URL PÚBLICA DE LA IMAGEN
-      */
-
-      const imagenURL =
-        SUPABASE_URL +
-        "/storage/v1/object/public/Productos/" +
-        nombreArchivo;
-
-
-      /*
-        2. GUARDAR PRODUCTO EN LA TABLA
-
-        Tabla: productos
-      */
-
-      let producto;
-
-      try {
-
-        producto = await fetch(
-          SUPABASE_URL +
-          "/rest/v1/productos",
-          {
-            method: "POST",
-
-            headers: {
-              "Authorization": "Bearer " + SUPABASE_KEY,
-              "apikey": SUPABASE_KEY,
-              "Content-Type": "application/json",
-              "Prefer": "return=minimal"
-            },
-
-            body: JSON.stringify({
-              nombre: nombre,
-              precio: Number(precio),
-              stock: Number(stock),
-              imagen: imagenURL,
-              categoria: categoria
-            })
-          }
-        );
-
-      } catch (error) {
-
-        throw new Error(
-          "No se pudo conectar con la tabla productos. " +
-          "Detalle: " + error.message
-        );
-
-      }
-
-
-      if (!producto.ok) {
-
-        const texto = await producto.text();
-
-        throw new Error(
-          "Error al guardar el producto: " + texto
-        );
-
-      }
-
-
-      /*
-        TODO CORRECTO
-      */
-
-      mensaje.textContent =
-        "✅ Producto agregado correctamente.";
-
-      formulario.reset();
-
-      preview.src = "";
-      preview.style.display = "none";
-
-
-    } catch (error) {
-
-      console.error("ERROR:", error);
-
-      mensaje.textContent =
-        "❌ No se pudo guardar: " +
-        error.message;
-
-
-    } finally {
-
-      boton.disabled = false;
-      boton.textContent =
-        "Guardar producto";
 
     }
-
-  });
+  );
 
 </script>
 
