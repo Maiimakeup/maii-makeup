@@ -207,28 +207,25 @@
 
         El bucket se llama "productos".
       */
-console.log("1 - intentando subir imagen");
+const subida = await fetch(
+  SUPABASE_URL + "/storage/v1/object/Productos/" + nombreArchivo,
+  {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer " + SUPABASE_KEY,
+      "apikey": SUPABASE_KEY,
+      "Content-Type": imagen.type
+    },
+    body: imagen
+  }
+);
 
-      if (!subida.ok) {
-        
-      const subida = await fetch(
-        SUPABASE_URL +
-        "/storage/v1/object/Productos/" +
-        nombreArchivo,
-        {
-          method: "POST",
+if (!subida.ok) {
+  const texto = await subida.text();
+  throw new Error("STORAGE: " + texto);
+}
 
-          headers: {
-            "Authorization": "Bearer " + SUPABASE_KEY,
-            "apikey": SUPABASE_KEY,
-            "Content-Type": imagen.type
-          },
-
-          body: imagen
-        }
-      );
-
-      if (!subida.ok) {
+console.log("IMAGEN SUBIDA OK");
         const error = await subida.text();
         throw new Error("Error al subir la imagen: " + error);
       }
